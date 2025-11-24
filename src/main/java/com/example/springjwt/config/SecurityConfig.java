@@ -58,7 +58,7 @@ public class SecurityConfig {
 
         // JWTFilter 등록
         http.addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
-        
+
         return http.build();
     }
 }
