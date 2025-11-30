@@ -1,6 +1,5 @@
 package com.example.springjwt.controller;
 
-import com.example.springjwt.jwt.JWTUtil;
 import com.example.springjwt.service.AuthService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;

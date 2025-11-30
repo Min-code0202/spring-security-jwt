@@ -52,6 +52,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests((auth) -> auth
                 .requestMatchers("/login", "/", "/join").permitAll()
                 .requestMatchers("/admin").hasRole("ADMIN")
+                .requestMatchers("/reissue").permitAll()
                 .anyRequest().authenticated());
 
         // 커스텀한 필터(LoginFilter) 등록
