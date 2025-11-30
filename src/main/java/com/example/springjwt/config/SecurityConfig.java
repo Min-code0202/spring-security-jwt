@@ -3,6 +3,7 @@ package com.example.springjwt.config;
 import com.example.springjwt.jwt.JWTFilter;
 import com.example.springjwt.jwt.JWTUtil;
 import com.example.springjwt.jwt.LoginFilter;
+import com.example.springjwt.repository.RefreshRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +28,7 @@ public class SecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
     private final JWTUtil jwtUtil;
+    private final RefreshRepository refreshRepository;
 
     @Bean
     public BCryptPasswordEncoder encoder(){
@@ -56,7 +58,7 @@ public class SecurityConfig {
                 .anyRequest().authenticated());
 
         // 커스텀한 필터(LoginFilter) 등록
-        http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository), UsernamePasswordAuthenticationFilter.class);
 
         http.sessionManagement((session) -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS));

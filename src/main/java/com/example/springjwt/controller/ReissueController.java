@@ -1,5 +1,6 @@
 package com.example.springjwt.controller;
 
+import com.example.springjwt.dto.TokenPair;
 import com.example.springjwt.service.AuthService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,13 +38,22 @@ public class ReissueController {
         }
 
         try {
-            String newAccess = authService.reissueAccessToken(refresh);
-            response.setHeader("access", newAccess);
+            TokenPair tokenPair = authService.reissueTokens(refresh);
+
+            // Access는 헤더
+            response.setHeader("access", tokenPair.getAccess());
+
+            // Refresh는 쿠키로 재발급
+            Cookie cookie = new Cookie("refresh", tokenPair.getRefresh());
+            cookie.setHttpOnly(true);
+            cookie.setMaxAge(86400);
+            cookie.setPath("/");
+            response.addCookie(cookie);
+
             return ResponseEntity.ok().build();
 
         } catch (IllegalArgumentException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
         }
     }
 }
