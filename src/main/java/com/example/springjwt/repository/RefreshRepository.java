@@ -9,7 +9,5 @@ public interface RefreshRepository extends JpaRepository<RefreshEntity, Long> {
     Boolean existsByRefresh(String refresh);
 
     @Transactional
-    void deleteByUsername(String username);
-
-    RefreshEntity findByUsername(String username);
+    void deleteByRefresh(String refresh);
 }

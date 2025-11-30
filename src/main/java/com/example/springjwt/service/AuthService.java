@@ -41,7 +41,7 @@ public class AuthService {
         String newAccess  = jwtUtil.createJwt("access",  username, role,  10 * 60 * 1000L);
         String newRefresh = jwtUtil.createJwt("refresh", username, role, 86400 * 1000L);
 
-        refreshRepository.deleteByUsername(username);
+        refreshRepository.deleteByRefresh(refreshToken);
         addRefreshEntity(username, newRefresh, 86400000L);
 
         return new TokenPair(newAccess, newRefresh);
