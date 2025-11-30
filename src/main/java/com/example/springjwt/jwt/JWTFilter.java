@@ -2,6 +2,7 @@ package com.example.springjwt.jwt;
 
 import com.example.springjwt.dto.CustomUserDetails;
 import com.example.springjwt.entity.UserEntity;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 @RequiredArgsConstructor
 public class JWTFilter extends OncePerRequestFilter {
@@ -21,46 +23,49 @@ public class JWTFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        // request에서 Authorization 헤더를 찾음
-        String authorization = request.getHeader("Authorization");
 
-        if(authorization == null || !authorization.startsWith("Bearer ")) {
-            System.out.println("token null");
+        // 헤더에서 access키에 담긴 토큰을 꺼냄
+        String accessToken = request.getHeader("access");
+        // 토큰이 없다면 다음 필터로 넘김
+        if (accessToken == null) {
             filterChain.doFilter(request, response);
-
-            // 조건에 해당하면 메소드 종료
             return;
         }
 
-        System.out.println("authorization now");
-        // Bear 부분 제거
-        String token =  authorization.split(" ")[1];
+        // 토큰 만료 시, 다음 필터로 넘기지 않음
+        try{
+            jwtUtil.isExpired(accessToken);
+        }catch(ExpiredJwtException e){
 
-        // 토큰 소멸 시간 기준
-        if(jwtUtil.isExpired(token)) {
-            System.out.println("token expired");
-            filterChain.doFilter(request, response);
+            // response body
+            PrintWriter writer = response.getWriter();
+            writer.write("access token expired");
 
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
-        // 토큰에서 username, role 획득
-        String username = jwtUtil.getUsername(token);
-        String role = jwtUtil.getRole(token);
+        // 토큰이 access인지 확인
+        String category = jwtUtil.getCategory(accessToken);
+        if(!category.equals("access")){
+            PrintWriter writer = response.getWriter();
+            writer.write("access token invalid");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
 
-        // userEntity를 생성
+        // username, role 값 획득
+        String username = jwtUtil.getUsername(accessToken);
+        String role = jwtUtil.getRole(accessToken);
+
         UserEntity userEntity = UserEntity.builder()
                 .username(username)
-                .password("temppassword")
                 .role(role)
                 .build();
 
-        // UserDetails에 화면 정보 객체 담기
         CustomUserDetails customUserDetails = new CustomUserDetails(userEntity);
 
-        // 스프링 시큐리티 인증 토큰 생성
         Authentication authToken = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
-        // 세션에 사용자 등록
         SecurityContextHolder.getContext().setAuthentication(authToken);
 
         filterChain.doFilter(request, response);
